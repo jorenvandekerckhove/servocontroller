@@ -39,13 +39,13 @@ signal old_Ton: natural := 150;
 signal done_s: std_logic := '0';
 begin
 	set_Ton_proc: process(rst, servo_pos)
-	variable noffset: natural := 150;
+	variable noffset: natural := 125;
 	variable nposition: integer := 0;	
 	begin
 		if(rst = '1') then
 			Ton <= 150;				
 		else
-			nposition := to_integer(signed(servo_pos))/5;
+			nposition := to_integer(unsigned(servo_pos))/5;
 			Ton <= (noffset + nposition);
 			Ton_out <= (noffset + nposition);
 		end if;

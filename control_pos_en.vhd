@@ -31,9 +31,9 @@ architecture behavioral of control_pos_en is
 signal s_position : std_logic_vector(7 downto 0) := (others=>'0');
 begin
 	process(data_pos)
-	variable noffset: natural := 150;	
+	variable noffset: natural := 125;	
 	begin
-		s_position <= std_logic_vector(to_unsigned((to_integer(signed(data_pos))/5)+noffset,8));
+		s_position <= std_logic_vector(to_unsigned((to_integer(unsigned(data_pos))/5)+noffset,8));
 	end process;
 
 	ok_pos <= '0' when recr_pos /= s_position else
