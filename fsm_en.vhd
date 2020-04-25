@@ -69,18 +69,6 @@ begin
 		end case;
 	end process;
 	
-	-- register_transfers: process(clk, rst)
-	-- begin
-		-- if(clk'event and clk = '1') then
-			-- case(currentState) is
-			-- when idle =>
-			-- when check_address =>
-			-- when send_data =>				
-			-- when wait_for_done =>
-			-- end case;
-		-- end if;
-	-- end process;
-	
 	q_data <= addr_data when currentState = check_address and nextState = send_data 
 				and clk'event and clk = '1';
 end architecture;

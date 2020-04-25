@@ -54,10 +54,6 @@ begin
 	cnt_proc: process(clk)
 	begin	
 		if clk'event and clk = '1' then
-			-- if(Ton /= old_Ton) then
-				-- done_s <= '0';
-				-- old_Ton <= Ton;
-			-- end if;
 			if count = (period - 1) then
 				old_Ton <= Ton;
 				count <= (others => '0'); 
