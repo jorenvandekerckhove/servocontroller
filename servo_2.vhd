@@ -65,7 +65,7 @@ end component;
 
 begin
 	fsm: fsm_en 
-	generic map(addr_sc => "10011111")
+	generic map(addr_sc => "00000010")
 	port map (
 		clk => clk,
 		rst => rst,
