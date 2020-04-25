@@ -1,7 +1,7 @@
  -----------------------------------------------------------------------------
  -- File           : tb_servo.vhd
  -----------------------------------------------------------------------------
- -- Description    : Testbench for fsm and pwm together
+ -- Description    : Testbench for the servocontroller
  -- --------------------------------------------------------------------------
  -- Author         : Joren Vandekerckhove
  -- Date           : 20/03/2020
@@ -14,14 +14,16 @@
  -- style for writing complex behavioural models.
  -----------------------------------------------------------------------------
 
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+ library IEEE;
+ use IEEE.STD_LOGIC_1164.all;
+ use IEEE.STD_LOGIC_unsigned.all;
+ use IEEE.numeric_std.all;
 
-entity tb_servo is
+entity tb_servocontroller is
 end entity;
 
-architecture test of tb_servo is
+architecture testbench of tb_servocontroller is
+    -- signals for servocontroller
 	signal clk: std_logic;
 	signal rst: std_logic;
 	signal servo_clk: std_logic;
@@ -31,9 +33,18 @@ architecture test of tb_servo is
 	signal pwm: std_logic;
 	signal Ton_out: natural;
 	signal old_Ton_out: natural;
-	signal q_data: std_logic_vector(7 downto 0);
-  
-	component servo is
+    signal q_data: std_logic_vector(7 downto 0);
+    -- signals for recreate position
+    signal s_servo_pos: std_logic_vector(7 downto 0);
+    -- signals for control position
+    signal s_ok_pos: std_logic;
+    -- general signals and constants
+    signal EndOfSim : boolean := false; 
+	constant clkPeriod : time := 10 ms;
+	constant servoClkPeriod: time := 10 us;
+
+    -- component initialisations begin
+	component servocontroller is
 	generic(addr_sc: std_logic_vector(7 downto 0));
 	port (
 		clk: in std_logic;
@@ -47,14 +58,27 @@ architecture test of tb_servo is
 		old_Ton_out: out natural;
 		q_data: out std_logic_vector(7 downto 0)
 		);
-	end component;
-  
-	signal EndOfSim : boolean := false; 
-	constant clkPeriod : time := 10 ms;
-	constant servoClkPeriod: time := 10 us;
-	
-	begin
-	
+    end component;
+
+    component recreate_pos_en is
+    port(
+        pwm: in std_logic;
+		servo_pos : out std_logic_vector(7 downto 0)
+    );
+    end component;
+
+    component control_pos_en is
+    port(
+        recr_pos: in std_logic_vector(7 downto 0);
+		data_pos : in std_logic_vector(7 downto 0);
+		ok_pos: out std_logic
+    );
+    end component;
+    -- component initialisations end
+    
+    -- begin architecture
+    begin
+        	
 	clock: process
 	begin
 		clk <= '0';
@@ -81,8 +105,8 @@ architecture test of tb_servo is
 		wait;
 	end process;
 
-	servo_1: servo 
-	generic map(addr_sc => "10011111")
+	servo_1: servocontroller 
+	generic map(addr_sc => "00000001")
 	port map (
 		clk => clk,
 		rst => rst,
@@ -94,22 +118,42 @@ architecture test of tb_servo is
 		Ton_out => Ton_out,
 		old_Ton_out => old_Ton_out,
 		q_data => q_data
+    );
+    
+    recreate_pos_en_1: recreate_pos_en 
+	port map (
+		pwm => pwm,
+		servo_pos => s_servo_pos
+    );
+    
+    control_pos_en_1: control_pos_en 
+	port map (
+		recr_pos => s_servo_pos,
+		data_pos => q_data,
+		ok_pos => s_ok_pos
 	);
 	
 	process 
+	variable servo_data : integer := 0;
 	begin
 		rst <= '1'; 
-		set <= '1';
-		addr_data <= "00000000";
-		wait for 55 ms;
-		addr_data <= "10011111";
-		rst <= '0';
-		wait for 10 ms;
-		addr_data <= "01100000";
-		wait for 10 ms;
-		addr_data <= (others => '0');
 		set <= '0';
-		wait for 100 ms;
+		addr_data <= "00000000";
+		wait for 35 ms;
+		rst <= '0';
+		set <= '1';
+		for i in 0 to 8 loop
+			if(i = 8) then servo_data := 0+32*i-1; else servo_data := 0+32*i; end if;
+			addr_data <= "00000001";
+			wait for 10 ms;
+			addr_data <= std_logic_vector(to_unsigned(servo_data,8));
+			wait for 10 ms;
+			set <= '0';	
+			wait for 10 ms;
+			set <= '1';
+			wait for 10 ms;
+		end loop;			
+		wait for 80 ms;
 		EndOfSim <= true;
 		wait;
 	end process;

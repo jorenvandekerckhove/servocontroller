@@ -19,7 +19,7 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.STD_LOGIC_unsigned.all;
 use IEEE.numeric_std.all;
 
-entity servo is
+entity servocontroller is
 	generic(addr_sc: std_logic_vector(7 downto 0));
 	port(
 		clk: in std_logic;
@@ -33,9 +33,9 @@ entity servo is
 		old_Ton_out: out natural;
 		q_data: out std_logic_vector(7 downto 0)
 		);
-end servo;
+end servocontroller;
 
-architecture behavioral of servo is
+architecture structural of servocontroller is
 signal s_done: std_logic;
 signal s_data: std_logic_vector(7 downto 0);
 
@@ -65,7 +65,7 @@ end component;
 
 begin
 	fsm: fsm_en 
-	generic map(addr_sc => "00000010")
+	generic map(addr_sc => addr_sc)
 	port map (
 		clk => clk,
 		rst => rst,
