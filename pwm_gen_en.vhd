@@ -36,19 +36,17 @@ signal count : std_logic_vector(10 downto 0) := (others => '0');
 signal period: std_logic_vector(10 downto 0) := "11111010000"; --2000
 signal Ton : natural := 150;
 signal old_Ton: natural := 150;
+signal old_servo_pos: std_logic_vector(7 downto 0) := "00000000";
 signal done_s: std_logic := '0';
 begin
-	set_Ton_proc: process(rst, servo_pos)
+	set_Ton_proc: process(servo_pos)
 	variable noffset: natural := 125;
 	variable nposition: integer := 0;	
 	begin
-		if(rst = '1') then
-			Ton <= 150;				
-		else
-			nposition := to_integer(unsigned(servo_pos))/5;
-			Ton <= (noffset + nposition);
-			Ton_out <= (noffset + nposition);
-		end if;
+		nposition := to_integer(unsigned(servo_pos))/5;
+		if(nposition > 175) then nposition := 175; end if;
+		Ton <= (noffset + nposition);
+		Ton_out <= (noffset + nposition);
 	end process set_Ton_proc;
 	
 	cnt_proc: process(clk)

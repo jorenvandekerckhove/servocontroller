@@ -31,8 +31,9 @@ entity fsm_en is
 end fsm_en;
 
 architecture behavioral of fsm_en is
-	type states is (idle, check_address, send_data, wait_for_done);
+	type states is (idle, check_address, wrong_address, send_data, wait_for_done);
 	signal currentState, nextState: states;
+	signal broadcast_addr: std_logic_vector(7 downto 0) := (others => '1');
 begin
 	sync_proc: process (rst, clk)
 	begin
@@ -53,11 +54,13 @@ begin
 				nextState <= idle;
 			end if;
 		when check_address =>
-			if(addr_data = addr_sc and set = '1') then
+			if((addr_data = addr_sc or addr_data = broadcast_addr) and set = '1') then
 				nextState <= send_data;				
 			else
-				nextState <= idle;
+				nextState <= wrong_address;
 			end if;
+		when wrong_address =>
+			nextState <= idle;
 		when send_data =>
 			nextState <= wait_for_done;
 		when wait_for_done =>
