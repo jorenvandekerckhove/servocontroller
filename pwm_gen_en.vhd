@@ -44,7 +44,7 @@ begin
 	variable nposition: integer := 0;	
 	begin
 		nposition := to_integer(unsigned(servo_pos))/5;
-		if(nposition > 175) then nposition := 175; end if;
+		if(nposition > 50) then nposition := 50; end if;
 		Ton <= (noffset + nposition);
 		Ton_out <= (noffset + nposition);
 	end process set_Ton_proc;
