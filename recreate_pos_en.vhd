@@ -35,7 +35,7 @@ begin
 	begin
 		if pwm'event and pwm = '1' then
 			t_rise := now;
-		elsif pwm'event and pwm = '0' then
+		elsif pwm'event and pwm = '0' then -- works in simulation, but not in elaboration of Xilinx
 			delay := now - t_rise; -- max value is 1750000 ns, min value is 1250000 ns
 			position := delay / 10000 ns;
 			servo_pos <= std_logic_vector(to_unsigned(position, 8));
