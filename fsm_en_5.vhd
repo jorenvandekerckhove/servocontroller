@@ -32,37 +32,39 @@ entity fsm_en is
 end fsm_en;
 
 architecture behavioral of fsm_en is
-	type states is (reset_pwm, check_address, send_data, wait_for_ok_flag);
+	type states is (reset_pwm, check_address, run, finished);
 	signal currentState, nextState: states;
 	signal broadcast_addr: std_logic_vector(7 downto 0) := (others => '1');
+	signal iCnt_p, iCnt_f: integer;
+	signal t_rise : time := 0 ns;
 begin
 	sync_proc: process (rst, clk)
 	begin
 		if (rst = '1') then
 			currentState <= reset_pwm;
+			iCnt_p <= 0;
 		elsif rising_edge (clk) then
+			t_rise <= now;
+			iCnt_p <= iCnt_f;
 			currentState <= nextState;
 		end if;
 	end process;	
 	
-	next_state_logic: process (currentState, set, ok_flag)
+	next_state_logic: process (currentState, set, ok_flag, iCnt_p)
+	variable delay: integer := 2;
 	begin
+		iCnt_f <= iCnt_p;
 		case currentState is
 		when reset_pwm =>
 			nextState <= check_address;
 		when check_address =>
 			if(set = '1' and (addr_data = addr_sc or addr_data = broadcast_addr)) then
-				nextState <= send_data;
+				iCnt_f <= delay;
+				nextState <= run;
 			end if;
-		when send_data =>	
-		  nextState <= wait_for_ok_flag;	
-		when wait_for_ok_flag =>
-		  if(set = '0' and ok_flag = '1') then
-		     nextState <= check_address; 
-		  else
-             nextState <= wait_for_ok_flag;
-		  end if;
-		   
+		when run =>
+			iCnt_f <= iCnt_p - 1;			
+		when finished =>
 		end case;
 	end process;
 
@@ -74,19 +76,17 @@ begin
 					q_data <= "01111101";
 					done <= '0';
 				when check_address =>
-					if(nextState = send_data and set = '1' and ok_flag = '1') then
+					if(nextState = send_data and set = '1' and ok_flag = '1' and iCnt_f = 2) then
 						q_data <= addr_data;
 						done <= '0';
 					else
 						done <= '1';
 					end if;
-				when send_data =>	
-				    if(set = '1') then
-				        q_data <= addr_data;
-                        done <= '0';
-				    end if;			
-				when wait_for_ok_flag =>
-				    done <= '1';
+				when run =>	
+					if iCnt_p <= 1 then
+						done <= '1';
+					end if;				
+				when finished =>
 			end case;
 		end if;
 	end process;

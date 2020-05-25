@@ -47,7 +47,8 @@ port(
 	set: in std_logic;
 	ok_flag: in std_logic;
 	addr_data: in std_logic_vector(7 downto 0);
-	q_data: out std_logic_vector(7 downto 0)
+	q_data: out std_logic_vector(7 downto 0);
+	done: out std_logic
 	);
 end component;
 
@@ -72,7 +73,8 @@ begin
 		set => set,
 		ok_flag => s_done,
 		addr_data => addr_data,
-		q_data => s_data
+		q_data => s_data,
+		done => done
 	);	
 	
 	pwm_gen: pwm_gen_en port map (
@@ -86,5 +88,4 @@ begin
 	);
 	
 	q_data <= s_data;
-	done <= s_done;
 end architecture;
